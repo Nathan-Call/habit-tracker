@@ -263,6 +263,11 @@ a:hover {
   justify-content: center;
 }
 
+#root {
+  min-height: 75vh;
+  margin-top: 75px;
+}
+
 @media (max-width: 767px) {
   input[type="text"] {
     min-width: 75px;
