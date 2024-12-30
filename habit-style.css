@@ -4,6 +4,10 @@ html {
   justify-items: center;
 }
 
+h1 {
+  text-align: center;
+}
+
 .time {
   font-family: Consolas;
   font-weight: bold;
