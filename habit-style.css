@@ -1,0 +1,270 @@
+html {
+  background-color: #121212;
+  color: #e0e0e0;
+  justify-items: center;
+}
+
+.time {
+  font-family: Consolas;
+  font-weight: bold;
+}
+
+.warning {
+  color: #f44336;
+}
+
+/* General Background */
+body {
+  background-color: #121212;
+  color: #e0e0e0;
+  font-family: "Arial", sans-serif;
+}
+
+/* Button Styles */
+button {
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin-inline: 5px;
+  border-radius: 5px;
+}
+
+button:hover {
+  background-color: #45a049;
+}
+
+button.delete {
+  background-color: #f44336;
+}
+
+button.delete:hover {
+  background-color: #d32f2f;
+}
+
+button.edit {
+  background-color: #1976d2;
+  position: absolute;
+  top: 15px;
+  right: 15px;
+}
+
+button.edit:hover {
+  background-color: #1565c0;
+}
+
+.time {
+  color: #e0e0e0;
+  font-size: 1.5rem;
+}
+
+.warning {
+  color: #f44336;
+}
+
+/* Habit List */
+.habit-container li {
+  background-color: #1f1f1f;
+  border: 1px solid #333333;
+  margin-bottom: 10px;
+  border-radius: 8px;
+}
+
+.habit-container li.completed {
+  color: #4caf50;
+}
+
+.habit-container li.pending {
+  background-color: #ffc107;
+  color: #121212;
+}
+
+.habit-container ul {
+  padding: 0px;
+}
+
+/* Input Fields */
+input[type="text"] {
+  background-color: #333333;
+  color: #e0e0e0;
+  border: 1px solid #555555;
+  padding: 8px;
+  border-radius: 5px;
+  min-width: 250px;
+}
+
+input[type="text"]:focus {
+  border-color: #1976d2;
+  outline: none;
+}
+
+/* Dividers */
+hr {
+  border-color: #333333;
+}
+
+/* Card Background */
+.card {
+  background-color: #1f1f1f;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  padding: 20px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+}
+
+/* Links */
+a {
+  color: #1976d2;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+.habit-item {
+  list-style: none;
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  width: 95%;
+  padding: 0px;
+  max-width: 500px; /* Set a maximum width */
+  margin-left: auto;
+  margin-right: auto; /* Center the item horizontally */
+}
+
+/* Habit Card Wrapper (Clickable Area) */
+
+.habit-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 10px;
+  background-color: #1f1f1f;
+  border-radius: 8px;
+  transition: background-color 0.3s ease;
+  max-width: 500px; /* Set a maximum width */
+}
+
+/* Hover Effect for Habit Card */
+.habit-card:hover {
+  background-color: #333333; /* Darken the background on hover */
+}
+
+/* Habit Item Checkbox Container */
+.habit-checkbox-container {
+  display: flex;
+  align-items: center;
+  flex-grow: 1; /* Allow the checkbox and label to take up available space */
+}
+
+/* Custom Checkbox */
+.habit-checkbox {
+  appearance: none; /* Remove default checkbox */
+  -webkit-appearance: none; /* For Safari */
+  width: 20px;
+  min-width: 20px;
+  height: 20px;
+  min-height: 20px;
+  border: 2px solid #4caf50;
+  border-radius: 5px;
+  background-color: #1f1f1f;
+  position: relative;
+  margin-right: 10px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+/* Checkbox when checked */
+.habit-checkbox:checked {
+  background-color: #4caf50;
+  border-color: #4caf50;
+}
+
+.habit-checkbox:checked::after {
+  content: "✔";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 14px;
+  color: white;
+}
+
+/* Label Styling */
+.habit-label {
+  font-size: 1.1rem;
+  color: #e0e0e0;
+  font-weight: 500;
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.3s ease;
+}
+
+/* Hover effect on label */
+.habit-label:hover {
+  color: #4caf50;
+}
+
+/* Button Styling for Edit Mode (Delete Button) */
+.delete-btn {
+  background-color: #f44336;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  border-radius: 5px;
+  transition: background-color 0.3s ease;
+}
+
+/* Hover effect for delete button */
+.delete-btn:hover {
+  background-color: #d32f2f;
+}
+
+/* Disabled State for Checkbox */
+.habit-checkbox:disabled {
+  background-color: #333333;
+  border-color: #555555;
+  cursor: not-allowed;
+}
+
+/* Checkbox Hover Effect */
+.habit-checkbox:hover {
+  border-color: #45a049;
+  background-color: #333333;
+}
+
+/* Focus Effect for Accessibility */
+.habit-checkbox:focus {
+  outline: 2px solid #1976d2;
+}
+
+#clock-section {
+  display: flex;
+  justify-content: center;
+}
+.live-clock {
+  margin-right: 15px;
+}
+.countdown-timer {
+  margin-left: 15px;
+}
+
+#habit-form {
+  display: flex;
+  justify-content: center;
+}
+
+@media (max-width: 767px) {
+  input[type="text"] {
+    min-width: 75px;
+  }
+}
