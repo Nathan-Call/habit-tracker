@@ -120,7 +120,6 @@ const HabitContainer = () => {
       ...checkboxStates,
       [habitId]: !checkboxStates[habitId],
     };
-    console.log(updatedStates, habits);
     setCheckboxStates(updatedStates);
     if (Object.values(updatedStates).every((value) => value === true)) {
       triggerConfetti();
@@ -160,11 +159,19 @@ const HabitContainer = () => {
       0
     );
     const timeUntilReset = nextReset - now;
-
     const resetTimeout = setTimeout(() => {
-      setCheckboxStates({});
+      const resetCheckboxStates = Object.fromEntries(
+        Object.keys(checkboxStates).map((key) => [key, false])
+      );
+      const checkboxQuery = document.querySelectorAll('input[type="checkbox"]');
+      checkboxQuery.forEach((element) => {
+        if (!Object.hasOwn(checkboxStates, element.id.split("-")[1])) {
+          resetCheckboxStates[element.id.split("-")[1]] = false;
+        }
+      });
+      setCheckboxStates(resetCheckboxStates);
       saveToStorage("checkboxStates", {
-        states: {},
+        states: resetCheckboxStates,
         lastUpdated: new Date().toISOString(),
       });
     }, timeUntilReset);
