@@ -1,6 +1,8 @@
-const { useState, useEffect, useRef } = React;
+const { useState, useEffect } = React;
 
-// Function to trigger the confetti
+/* =====================
+   CONFETTI
+===================== */
 function triggerConfetti() {
   confetti({
     particleCount: 100,
@@ -9,43 +11,39 @@ function triggerConfetti() {
   });
 }
 
+/* =====================
+   LIVE CLOCK
+===================== */
 const LiveClock = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
-
+    const interval = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(interval);
   }, []);
 
   return (
     <div className="live-clock">
-      <p className={"time"}>{currentTime.toLocaleTimeString()}</p>
+      <p className="time">{currentTime.toLocaleTimeString()}</p>
     </div>
   );
 };
 
-const CountdownTimer = () => {
-  // Function to calculate the time left until 11:59 PM
+/* =====================
+   COUNTDOWN TIMER
+===================== */
+const CountdownTimer = ({ getNextReset }) => {
   const calculateTimeLeft = () => {
     const now = new Date();
-    const nextReset = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate() + 1,
-      0,
-      0,
-      0
-    ); // Midnight
+    const nextReset = getNextReset();
     const diff = nextReset - now;
 
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-    return { hours, minutes, seconds, diff };
+    return {
+      hours: Math.floor(diff / (1000 * 60 * 60)),
+      minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
+      seconds: Math.floor((diff % (1000 * 60)) / 1000),
+      diff,
+    };
   };
 
   const [timeLeft, setTimeLeft] = useState(calculateTimeLeft());
@@ -54,181 +52,150 @@ const CountdownTimer = () => {
     const interval = setInterval(() => {
       setTimeLeft(calculateTimeLeft());
     }, 1000);
-
     return () => clearInterval(interval);
   }, []);
 
-  const padWithZeros = (value) => String(value).padStart(2, "0");
-
-  // Determine if the time left is less than 60 minutes
-  const isLessThanOneHour = timeLeft.diff < 60 * 60 * 1000;
+  const pad = (v) => String(v).padStart(2, "0");
+  const warning = timeLeft.diff < 60 * 60 * 1000;
 
   return (
     <div className="countdown-timer">
-      <p className={isLessThanOneHour ? "warning time" : "time"}>
-        {padWithZeros(timeLeft.hours)}:{padWithZeros(timeLeft.minutes)}:
-        {padWithZeros(timeLeft.seconds)}
+      <p className={warning ? "warning time" : "time"}>
+        {pad(timeLeft.hours)}:{pad(timeLeft.minutes)}:{pad(timeLeft.seconds)}
       </p>
     </div>
   );
 };
 
-// Utility functions for Local Storage
-const loadFromStorage = (key, defaultValue) => {
-  const data = localStorage.getItem(key);
-  return data ? JSON.parse(data) : defaultValue;
+/* =====================
+   STORAGE UTILS
+===================== */
+const load = (key, fallback) => JSON.parse(localStorage.getItem(key)) ?? fallback;
+
+const save = (key, value) => localStorage.setItem(key, JSON.stringify(value));
+
+/* =====================
+   DATE HELPERS
+===================== */
+const getNextDailyReset = () => new Date(new Date().setHours(24, 0, 0, 0));
+
+const getNextWeeklyReset = () => {
+  const now = new Date();
+  const day = now.getDay();
+  const daysUntilMonday = (8 - day) % 7 || 7;
+
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate() + daysUntilMonday, 0, 0, 0);
 };
 
-const saveToStorage = (key, value) => {
-  localStorage.setItem(key, JSON.stringify(value));
+const sameDay = (a, b) => a.toDateString() === b.toDateString();
+
+const sameWeek = (a, b) => {
+  const startOfWeek = (d) => {
+    const date = new Date(d);
+    const day = date.getDay();
+    const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+    return new Date(date.setDate(diff)).toDateString();
+  };
+  return startOfWeek(a) === startOfWeek(b);
 };
 
-const HabitContainer = () => {
-  const [habits, setHabits] = useState(loadFromStorage("habits", []));
+/* =====================
+   DAILY HABITS
+===================== */
+const HabitContainer = ({ isEditMode }) => {
+  const [habits, setHabits] = useState(load("habits", []));
   const [checkboxStates, setCheckboxStates] = useState(() => {
-    const data = loadFromStorage("checkboxStates", {
-      states: {},
-      lastUpdated: null,
-    });
-    const now = new Date();
-    const lastUpdated = data.lastUpdated ? new Date(data.lastUpdated) : null;
-
-    // Reset checkbox states if lastUpdated is not from today
-    if (!lastUpdated || lastUpdated.toDateString() !== now.toDateString()) {
-      return {};
-    }
-
-    return data.states;
+    const data = load("checkboxStates", { states: {}, lastUpdated: null });
+    if (!data.lastUpdated) return {};
+    return sameDay(new Date(data.lastUpdated), new Date()) ? data.states : {};
   });
-  const [isEditMode, setIsEditMode] = useState(false); // Tracks if edit mode is active
 
-  // Add a new habit
-  const addHabit = (habitName) => {
-    const newId = Date.now();
-    const newHabits = [...habits, { id: newId, name: habitName }];
-    setHabits(newHabits);
-    saveToStorage("habits", newHabits);
-    setCheckboxStates({
-      ...checkboxStates,
-      [newId]: false,
+  const addHabit = (name) => {
+    const id = Date.now();
+    const updated = [...habits, { id, name }];
+    setHabits(updated);
+    save("habits", updated);
+  };
+
+  const toggleCheckbox = (id) => {
+    const updated = { ...checkboxStates, [id]: !checkboxStates[id] };
+    setCheckboxStates(updated);
+
+    if (Object.values(updated).every(Boolean)) triggerConfetti();
+
+    save("checkboxStates", {
+      states: updated,
+      lastUpdated: new Date().toISOString(),
     });
   };
 
-  // Toggle checkbox for a habit
-  const toggleCheckbox = (habitId) => {
-    const updatedStates = {
-      ...checkboxStates,
-      [habitId]: !checkboxStates[habitId],
-    };
+  const deleteHabit = (id) => {
+    const updatedHabits = habits.filter((h) => h.id !== id);
+    setHabits(updatedHabits);
+    save("habits", updatedHabits);
+
+    const updatedStates = { ...checkboxStates };
+    delete updatedStates[id];
     setCheckboxStates(updatedStates);
-    if (Object.values(updatedStates).every((value) => value === true)) {
-      triggerConfetti();
-    }
-    // Save updated states with a timestamp
-    saveToStorage("checkboxStates", {
+    save("checkboxStates", {
       states: updatedStates,
       lastUpdated: new Date().toISOString(),
     });
   };
 
-  // Delete a habit
-  const deleteHabit = (habitId) => {
-    const updatedHabits = habits.filter((habit) => habit.id !== habitId);
-    setHabits(updatedHabits);
-    saveToStorage("habits", updatedHabits);
-
-    // Remove the associated checkbox state
-    const updatedCheckboxStates = { ...checkboxStates };
-    delete updatedCheckboxStates[habitId];
-    setCheckboxStates(updatedCheckboxStates);
-    saveToStorage("checkboxStates", {
-      states: updatedCheckboxStates,
-      lastUpdated: new Date().toISOString(),
-    });
-  };
-
-  // Schedule reset at 11:59 PM
   useEffect(() => {
-    const now = new Date();
-    const nextReset = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate() + 1,
-      0,
-      0,
-      0
-    );
-    const timeUntilReset = nextReset - now;
-    const resetTimeout = setTimeout(() => {
-      const resetCheckboxStates = Object.fromEntries(
-        Object.keys(checkboxStates).map((key) => [key, false])
-      );
-      const checkboxQuery = document.querySelectorAll('input[type="checkbox"]');
-      checkboxQuery.forEach((element) => {
-        if (!Object.hasOwn(checkboxStates, element.id.split("-")[1])) {
-          resetCheckboxStates[element.id.split("-")[1]] = false;
-        }
-      });
-      setCheckboxStates(resetCheckboxStates);
-      saveToStorage("checkboxStates", {
-        states: resetCheckboxStates,
+    const timeout = setTimeout(() => {
+      const reset = Object.fromEntries(habits.map((h) => [h.id, false]));
+      setCheckboxStates(reset);
+      save("checkboxStates", {
+        states: reset,
         lastUpdated: new Date().toISOString(),
       });
-    }, timeUntilReset);
+    }, getNextDailyReset() - new Date());
 
-    return () => clearTimeout(resetTimeout);
+    return () => clearTimeout(timeout);
   }, []);
 
   return (
     <div className="habit-container">
+      <div className="habit-container-header">
+        <h2>Daily Habits</h2>
+        <CountdownTimer getNextReset={getNextDailyReset} />
+      </div>
       <form
-        id="habit-form"
+        className="habit-form"
         onSubmit={(e) => {
           e.preventDefault();
-          const habitName = e.target.elements.habitName.value.trim();
-          if (habitName) {
-            addHabit(habitName);
-            e.target.reset();
-          }
+          const name = e.target.habitName.value.trim();
+          if (name) addHabit(name);
+          e.target.reset();
         }}
       >
-        <input type="text" name="habitName" placeholder="Enter new habit" />
-        <button type="submit">Add Habit</button>
+        <input name="habitName" type="text" placeholder="Enter new habit" />
+        <button>Add Habit</button>
       </form>
-
-      <button onClick={() => setIsEditMode(!isEditMode)} className={"edit"}>
-        {isEditMode ? "Done" : "Edit"}
-      </button>
 
       <ul>
         {habits.map((habit) => (
           <li key={habit.id} className="habit-item">
-            <div
-              className="habit-card"
-              onClick={() => toggleCheckbox(habit.id)} // Toggle checkbox on card click
-            >
+            <div className="habit-card" onClick={() => toggleCheckbox(habit.id)}>
               <div className="habit-checkbox-container">
                 <input
                   type="checkbox"
-                  id={`habit-${habit.id}`}
                   checked={checkboxStates[habit.id] || false}
-                  disabled={isEditMode} // Disable checkbox in edit mode
+                  disabled={isEditMode}
                   className="habit-checkbox"
                 />
-                <label
-                  //   htmlFor={`habit-${habit.id}`}
-                  className="habit-label"
-                >
-                  {habit.name}
-                </label>
+                <label className="habit-label">{habit.name}</label>
               </div>
+
               {isEditMode && (
                 <button
+                  className="delete-btn"
                   onClick={(e) => {
-                    e.stopPropagation(); // Prevent triggering the onClick of the card
+                    e.stopPropagation();
                     deleteHabit(habit.id);
                   }}
-                  className="delete-btn"
                 >
                   Delete
                 </button>
@@ -241,19 +208,140 @@ const HabitContainer = () => {
   );
 };
 
+/* =====================
+   WEEKLY HABITS
+===================== */
+const WeeklyHabitContainer = ({ isEditMode }) => {
+  const [habits, setHabits] = useState(load("weeklyHabits", []));
+  const [checkboxStates, setCheckboxStates] = useState(() => {
+    const data = load("weeklyCheckboxStates", {
+      states: {},
+      lastUpdated: null,
+    });
+    if (!data.lastUpdated) return {};
+    return sameWeek(new Date(data.lastUpdated), new Date()) ? data.states : {};
+  });
+
+  const addHabit = (name) => {
+    const id = Date.now();
+    const updated = [...habits, { id, name }];
+    setHabits(updated);
+    save("weeklyHabits", updated);
+  };
+
+  const toggleCheckbox = (id) => {
+    const updated = { ...checkboxStates, [id]: !checkboxStates[id] };
+    setCheckboxStates(updated);
+
+    if (Object.values(updated).every(Boolean)) triggerConfetti();
+
+    save("weeklyCheckboxStates", {
+      states: updated,
+      lastUpdated: new Date().toISOString(),
+    });
+  };
+
+  const deleteHabit = (id) => {
+    const updatedHabits = habits.filter((h) => h.id !== id);
+    setHabits(updatedHabits);
+    save("habits", updatedHabits);
+
+    const updatedStates = { ...checkboxStates };
+    delete updatedStates[id];
+    setCheckboxStates(updatedStates);
+    save("checkboxStates", {
+      states: updatedStates,
+      lastUpdated: new Date().toISOString(),
+    });
+  };
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      const reset = Object.fromEntries(habits.map((h) => [h.id, false]));
+      setCheckboxStates(reset);
+      save("weeklyCheckboxStates", {
+        states: reset,
+        lastUpdated: new Date().toISOString(),
+      });
+    }, getNextWeeklyReset() - new Date());
+
+    return () => clearTimeout(timeout);
+  }, []);
+
+  return (
+    <div className="habit-container">
+      <div className="habit-container-header">
+        <h2>Weekly Habits</h2>
+        <CountdownTimer getNextReset={getNextWeeklyReset} />
+      </div>
+      <form
+        className="habit-form"
+        onSubmit={(e) => {
+          e.preventDefault();
+          const name = e.target.habitName.value.trim();
+          if (name) addHabit(name);
+          e.target.reset();
+        }}
+      >
+        <input name="habitName" type="text" placeholder="Enter new habit" />
+        <button>Add Habit</button>
+      </form>
+
+      <ul>
+        {habits.map((habit) => (
+          <li key={habit.id} className="habit-item">
+            <div className="habit-card" onClick={() => toggleCheckbox(habit.id)}>
+              <div className="habit-checkbox-container">
+                <input
+                  type="checkbox"
+                  checked={checkboxStates[habit.id] || false}
+                  disabled={isEditMode}
+                  className="habit-checkbox"
+                />
+                <label className="habit-label">{habit.name}</label>
+              </div>
+              {isEditMode && (
+                <button
+                  className="delete-btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deleteHabit(habit.id);
+                  }}
+                >
+                  Delete
+                </button>
+              )}
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+
+/* =====================
+   APP
+===================== */
 function App() {
-  ReactDOM.render(
+  const [isEditMode, setIsEditMode] = useState(false);
+
+  return (
     <React.StrictMode>
       <h1>Habit Tracker</h1>
       <div id="clock-section">
-        <LiveClock /> <CountdownTimer />
+        <LiveClock />
       </div>
-
-      <HabitContainer />
-    </React.StrictMode>,
-
-    document.getElementById("root")
+      <button onClick={() => setIsEditMode(!isEditMode)} className="edit">
+        {isEditMode ? "Done" : "Edit"}
+      </button>
+      <div id="core-habit-section">
+        <HabitContainer isEditMode={isEditMode} />
+        <WeeklyHabitContainer isEditMode={isEditMode} />
+      </div>
+    </React.StrictMode>
   );
 }
 
-App();
+// App();
+
+ReactDOM.render(<App />, document.getElementById("root"));

@@ -68,6 +68,15 @@ button.edit:hover {
   color: #f44336;
 }
 
+.habit-container {
+  background-color: #161616;
+  padding: 30px;
+  margin: 5px;
+  border-radius: 20px;
+  border: #232323 solid 5px;
+  height: min-content;
+}
+
 /* Habit List */
 .habit-container li {
   background-color: #1f1f1f;
@@ -87,6 +96,13 @@ button.edit:hover {
 
 .habit-container ul {
   padding: 0px;
+}
+
+.habit-container-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
 }
 
 /* Input Fields */
@@ -135,7 +151,7 @@ a:hover {
   align-items: center;
   justify-content: space-between;
   cursor: pointer;
-  width: 95%;
+  width: 100%;
   padding: 0px;
   max-width: 500px; /* Set a maximum width */
   margin-left: auto;
@@ -262,7 +278,7 @@ a:hover {
   margin-left: 15px;
 }
 
-#habit-form {
+.habit-form {
   display: flex;
   justify-content: center;
 }
@@ -270,6 +286,18 @@ a:hover {
 #root {
   min-height: 75vh;
   margin-top: 75px;
+}
+
+#core-habit-section {
+  display: grid;
+  grid-template-columns: 1fr; /* stacked by default */
+  gap: 1rem;
+}
+
+@media (min-width: 1050px) {
+  #core-habit-section {
+    grid-template-columns: 1fr 1fr; /* side-by-side */
+  }
 }
 
 @media (max-width: 767px) {
